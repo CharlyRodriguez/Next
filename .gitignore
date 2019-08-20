@@ -24,3 +24,6 @@ hs_err_pid*
 
 #intelliJ settings
 .iml
+/MFADJTES-02-MX/MFADJTES-02-MX.iml
+/MFADJTES-02-MX/target/
+/.idea/

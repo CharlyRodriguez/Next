@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context.xsd
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!-- MFADJTES-02-MX-beans.xml -->
+	
+	<!-- Set to the required transaction manager -->
+	<bean id="transactionManager" class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+
+	<bean class="org.springframework.batch.core.scope.StepScope" />
+	
+	<bean id="jobLauncher"  class="com.bbva.elara.batch.launcher.SimpleJobLauncherBean">
+		<property name="job" ref="MFADJTES-02-MX" />
+		<property name="batchLauncher" ref="batchLauncher" />
+		<property name="defaultIncrementer" ref="defaultIncrementer" />		
+	</bean>
+
+	<!-- Reader -->
+	<bean id="readFile" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
+		<property name="resource" value="file:/fichtemcomp/datent/MMFAD_D02_#{jobParameters[fecha]}_SolicitudesFallidas.txt" />
+		<property name="strict" value="false" />
+		<property name="lineMapper" ref="lineMapper" />
+	</bean>
+
+	<bean id="lineMapper" class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+		<property name="fieldSetMapper" ref="mapperSolicitudes" />
+		<property name="lineTokenizer" ref="processFileLengthLineTokenizer" />
+	</bean>
+
+	<bean name="processFileLengthLineTokenizer" class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+		<property name="names" value="SOLICITUD,CATNEGOCIO" />
+		<property name="delimiter" value="|" />
+	</bean>
+
+	<!-- Mapper -->
+	<bean id="mapperSolicitudes" class="com.bbva.mfad.batch.mapper.RequestMapper"/>
+	<!-- Fin de Reader -->
+	<bean id="justProcessing" class="com.bbva.mfad.batch.chunk.RequestProcessor" scope="step">
+		<property name="fecha" value="#{JobParameters[fecha]}"/>
+	</bean>
+
+	<bean id="writeALV" class="com.bbva.mfad.batch.chunk.RequestWriter" scope="step">
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+</beans>
